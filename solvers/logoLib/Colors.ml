@@ -1,3 +1,7 @@
+(* h: [0,1] *)
+(* s: [0,1] *)
+(* l: [0,1] *)
+
 let hsl2rgb h s l =
   if s = 0. then (1.,1.,1.) else
     let h2rgb p q t =
@@ -49,3 +53,4 @@ let interpolate_color (r1,g1,b1) (r2,g2,b2) =
     let s = s1 +. (s2-.s1)*.distance in
     let l = l1 +. (l2-.l1)*.distance in
     hsl2rgb h s l
+
