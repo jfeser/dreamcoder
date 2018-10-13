@@ -1,7 +1,5 @@
 open Core
 
-open Dreaming
-
 open Pregex
 open Program
 open Enumeration
@@ -10,11 +8,26 @@ open Utils
 open Timeout
 open Type
 open Tower
-    
+open Dreaming
+
 open Yojson.Basic
 
-    
-    
+
+let evolution_enumeration (behavior_hash : program -> (int*json) option) ?nc:(nc=1) g request ~ancestor
+    ~timeout ~maximumSize =
+  let request = match ancestor with
+      None -> request
+    | Some(_) -> request @> request
+  in
+
+  let behavior_hash = match ancestor with
+    | None -> behavior_hash
+    | Some(a) -> fun p -> behavior_hash (Apply(p,a))
+  in
+
+  helmholtz_enumeration behavior_hash ~nc g request ~timeout ~maximumSize
+
+
 
 let run_job channel =
   let open Yojson.Basic.Util in
@@ -33,10 +46,11 @@ let run_job channel =
     try j |> member "maximumSize" |> to_int
     with _ -> Int.max_value
   in
-  let g = j |> member "DSL" in
-  let g =
-    try deserialize_grammar g |> make_dummy_contextual
-    with _ -> deserialize_contextual_grammar g
+  let g = j |> member "DSL" |> deserialize_contextual_grammar in
+
+  let ancestor =
+    try j |> member "ancestor" |> to_string |> parse_program
+    with _ -> None
   in
 
   let k =
@@ -50,7 +64,7 @@ let run_job channel =
       | None -> (Printf.eprintf "Could not find special Helmholtz enumerator: %s\n" name; assert (false))
   in
 
-  helmholtz_enumeration ~nc:nc (k ~timeout:evaluationTimeout request (j |> member "extras")) g request ~timeout ~maximumSize
+  evolution_enumeration ~nc:nc (k ~timeout:evaluationTimeout request (j |> member "extras")) g request ~ancestor ~timeout ~maximumSize
 
 let output_job result =
   let open Yojson.Basic.Util in
