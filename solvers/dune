@@ -2,11 +2,7 @@
  (names solver
         compression
         helmholtz
-        geomDrawLambdaString
-        geomDrawFile
-        geomTest
         logoDrawString
-        logoSequenceString
         protonet_tester
         versionDemo
         re2Test
